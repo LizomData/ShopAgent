@@ -28,3 +28,5 @@ go.work.sum
 .idea
 *.xml
 
+# config
+/conf/config_db.ini
