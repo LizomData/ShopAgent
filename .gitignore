@@ -30,3 +30,4 @@ go.work.sum
 
 # config
 /conf/config_db.ini
+/tmp/

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"ShopAgent/controller/commodityController"
 	"ShopAgent/controller/userController"
 	"ShopAgent/util"
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,15 @@ func Routers() *gin.Engine {
 	{
 		group.POST("/login", userController.Login)
 		group.POST("/register", userController.Register)
+	}
+
+	group = r.Group("/api/v1/commodity")
+	group.Use(util.AuthMiddleware())
+	{
+		group.POST("/create", commodityController.Create)
+		group.POST("/query", commodityController.Query)
+		group.POST("/update", commodityController.Update)
+		group.POST("/delete", commodityController.Delete)
 	}
 
 	return r
