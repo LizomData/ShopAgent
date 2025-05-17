@@ -19,6 +19,7 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// 生成token
 func GenerateToken(user model.User, expiredTime_hour time.Duration) (string, error) {
 	claims := Claims{
 		UserID:   user.ID,

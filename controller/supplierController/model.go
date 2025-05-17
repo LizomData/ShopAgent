@@ -1,4 +1,4 @@
-package commodityController
+package supplierController
 
 type QueryRequest struct {
 	Page *int `json:"page" binding:"required"`
