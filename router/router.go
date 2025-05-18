@@ -1,8 +1,11 @@
 package router
 
 import (
+	"ShopAgent/controller/commodityCategoryController"
 	"ShopAgent/controller/commodityController"
 	"ShopAgent/controller/purchase_controller"
+	"ShopAgent/controller/salespersonController"
+	"ShopAgent/controller/supplierController"
 	"ShopAgent/controller/userController"
 	"ShopAgent/util"
 	"github.com/gin-gonic/gin"
@@ -28,6 +31,7 @@ func Routers() *gin.Engine {
 		group.POST("/delete", commodityController.Delete)
 	}
 
+
 	group = r.Group("/api/v1/purchase")
 	group.Use(util.AuthMiddleware())
 	{
@@ -38,6 +42,31 @@ func Routers() *gin.Engine {
 		// 退货管理
 		group.POST("/return", purchase_controller.CreateReturn)
 		group.GET("/return/list", purchase_controller.GetReturnList)
+  }
+	group = r.Group("/api/v1/supplier")
+	group.Use(util.AuthMiddleware())
+	{
+		group.POST("/create", supplierController.Create)
+		group.POST("/query", supplierController.Query)
+		group.POST("/update", supplierController.Update)
+		group.POST("/delete", supplierController.Delete)
+	}
+	group = r.Group("/api/v1/commodityCategory")
+	group.Use(util.AuthMiddleware())
+	{
+		group.POST("/create", commodityCategoryController.Create)
+		group.POST("/query", commodityCategoryController.Query)
+		group.POST("/update", commodityCategoryController.Update)
+		group.POST("/delete", commodityCategoryController.Delete)
+	}
+
+	group = r.Group("/api/v1/salesperson")
+	group.Use(util.AuthMiddleware())
+	{
+		group.POST("/create", salespersonController.Create)
+		group.POST("/query", salespersonController.Query)
+		group.POST("/update", salespersonController.Update)
+		group.POST("/delete", salespersonController.Delete)
 	}
 
 	return r

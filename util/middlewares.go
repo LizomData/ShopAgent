@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 跨域请求头处理
 func Cors() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		// 允许 Origin 字段中的域发送请求

@@ -77,10 +77,19 @@ func (s *CommodityDbService) GetById(user_id, id int64) (model.CommodityInfo, er
 	return commodity_info, err
 }
 
+
 // Update 更新商品信息
 // commodity_info: 需要更新的商品信息
 // 返回: 更新后的商品信息和可能的错误
-func (c *CommodityDbService) Update(commodity_info *model.CommodityInfo) (*model.CommodityInfo, error) {
+func (c *CommodityDbService) Update(user_id int64, commodity_info *model.CommodityInfo) (*model.CommodityInfo, error) {
+
+	_commodity_info, err := c.GetById(user_id, commodity_info.ID)
+	if err != nil {
+		return nil, fmt.Errorf("查询不到该商品")
+	}
+	commodity_info.UserID = _commodity_info.UserID
+	commodity_info.CreatedAt = _commodity_info.CreatedAt
+
 	commodity_info.UpdatedAt = time.Now().Unix()
 	result := database.GormDB.Where("id = ?", commodity_info.ID).Updates(commodity_info)
 	return commodity_info, result.Error
