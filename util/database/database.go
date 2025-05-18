@@ -2,6 +2,7 @@ package database
 
 import (
 	"ShopAgent/model"
+	"ShopAgent/model/po"
 	"fmt"
 	"gopkg.in/ini.v1"
 	"gorm.io/driver/mysql"
@@ -42,6 +43,11 @@ func initDb() *gorm.DB {
 		log.Fatalf("Failed to auto migrate: %v", err)
 	}
 
+
+	// 自动迁移商品进货出货的表结构
+	err = db.AutoMigrate(&po.PurchaseInbound{})
+	err = db.AutoMigrate(&po.PurchaseReturn{})
+
 	// 自动迁移表结构
 	err = db.AutoMigrate(&model.Supplier{})
 	if err != nil {
@@ -59,6 +65,7 @@ func initDb() *gorm.DB {
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
 	}
+
 
 	return db
 
