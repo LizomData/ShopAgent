@@ -36,7 +36,6 @@ func CreateReturn(c *gin.Context) {
 	response := gin.H{
 		"code":    200,
 		"message": "退货单创建成功",
-		"error":   "",
 		"data":    returnVO,
 	}
 

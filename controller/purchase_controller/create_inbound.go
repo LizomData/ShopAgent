@@ -35,7 +35,6 @@ func CreateInbound(c *gin.Context) {
 	response := gin.H{
 		"code":    200,
 		"message": "进货单创建成功",
-		"error":   "",
 		"data":    inboundVO,
 	}
 
