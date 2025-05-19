@@ -6,5 +6,5 @@ type QueryRequest struct {
 }
 
 type DeleteRequest struct {
-	ID int64 `json:"id" binding:"required"`
+	ID int64 `json:"id,string" binding:"required"`
 }
