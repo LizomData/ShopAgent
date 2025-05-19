@@ -32,7 +32,7 @@ func (u *SalespersonDbService) Create(salesperson *model.SalesPerson) (*model.Sa
 	result := database.GormDB.Create(&salesperson)
 	return salesperson, result.Error
 }
-func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.SalesPerson, error) {
+func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.SalesPerson, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -42,6 +42,14 @@ func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.Sal
 
 	offset := (page - 1) * size
 	var salespersons []model.SalesPerson
+	var total int64 // 新增总记录数变量
+
+	// 先查询总记录数
+	if err := database.GormDB.Model(&model.Supplier{}).
+		Where("user_id = ?", user_id).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	err := database.GormDB.
 		Where("user_id = ?", user_id).
@@ -49,7 +57,7 @@ func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.Sal
 		Limit(size).
 		Find(&salespersons).Error
 
-	return salespersons, err
+	return salespersons, total, err
 }
 
 func (s *SalespersonDbService) GetById(user_id, id int64) (model.SalesPerson, error) {

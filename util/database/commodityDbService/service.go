@@ -45,7 +45,7 @@ func (u *CommodityDbService) Create(commodity_info *model.CommodityInfo) (*model
 // page: 页码
 // size: 每页数量
 // 返回: 商品列表和可能的错误
-func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.CommodityInfo, error) {
+func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.CommodityInfo, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -55,6 +55,14 @@ func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.Commo
 
 	offset := (page - 1) * size
 	var commodity_infos []model.CommodityInfo
+	var total int64 // 新增总记录数变量
+
+	// 先查询总记录数
+	if err := database.GormDB.Model(&model.Supplier{}).
+		Where("user_id = ?", user_id).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	err := database.GormDB.
 		Where("user_id = ?", user_id).
@@ -62,7 +70,7 @@ func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.Commo
 		Limit(size).
 		Find(&commodity_infos).Error
 
-	return commodity_infos, err
+	return commodity_infos, total, err
 }
 
 // GetById 根据ID获取商品信息
@@ -76,7 +84,6 @@ func (s *CommodityDbService) GetById(user_id, id int64) (model.CommodityInfo, er
 		First(&commodity_info, "id = ?", id).Error
 	return commodity_info, err
 }
-
 
 // Update 更新商品信息
 // commodity_info: 需要更新的商品信息

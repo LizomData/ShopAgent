@@ -18,10 +18,10 @@ func Query(c *gin.Context) {
 		c.JSON(requestModel.ResponseFailure(999, "获取用户id失败: "+err.Error()))
 		return
 	}
-	commodityCategorys, err := commodityCategoryDbService.Instance.Query(user.ID, *req.Page, *req.Size)
+	commodityCategorys, total, err := commodityCategoryDbService.Instance.Query(user.ID, *req.Page, *req.Size)
 	if err != nil {
 		c.JSON(requestModel.ResponseFailure(999, "查询失败:"+err.Error()))
 		return
 	}
-	c.JSON(requestModel.ResponseSuccess(commodityCategorys))
+	c.JSON(requestModel.ResponseSuccess(gin.H{"list": commodityCategorys, "total": total}))
 }

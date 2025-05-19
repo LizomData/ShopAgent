@@ -18,10 +18,10 @@ func Query(c *gin.Context) {
 		c.JSON(requestModel.ResponseFailure(999, "获取用户id失败: "+err.Error()))
 		return
 	}
-	suppliers, err := supplierDbService.Instance.Query(user.ID, *req.Page, *req.Size)
+	suppliers, total, err := supplierDbService.Instance.Query(user.ID, *req.Page, *req.Size)
 	if err != nil {
 		c.JSON(requestModel.ResponseFailure(999, "查询失败:"+err.Error()))
 		return
 	}
-	c.JSON(requestModel.ResponseSuccess(suppliers))
+	c.JSON(requestModel.ResponseSuccess(gin.H{"list": suppliers, "total": total}))
 }
