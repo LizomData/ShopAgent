@@ -1,7 +1,7 @@
 package model
 
 type Supplier struct {
-	ID             int64   `gorm:"type:bigint;primary_key" json:"id"`
+	ID             int64   `gorm:"type:bigint;primary_key" json:"id,string"`
 	UserID         int64   `gorm:"type:bigint;not null;comment:关联用户ID" json:"-"`
 	Name           *string `gorm:"type:varchar(255);not null;default:''" json:"name" binding:"required"`
 	PersonInCharge *string `gorm:"type:varchar(255);not null;default:'';comment:负责人" json:"person_in_charge" binding:"required"`
