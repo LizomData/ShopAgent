@@ -1,7 +1,7 @@
 package model
 
 type SalesPerson struct {
-	ID             int64    `gorm:"type:bigint;primary_key;comment:销售员id" json:"id"`
+	ID             int64    `gorm:"type:bigint;primary_key;comment:销售员id" json:"id,string"`
 	UserID         int64    `gorm:"type:bigint;not null;comment:关联用户ID" json:"-"`
 	Name           *string  `gorm:"type:varchar(255);not null;default:'';comment:销售员姓名" json:"name" binding:"required"`
 	Gender         *string  `gorm:"type:ENUM('M','F','O','U') NOT NULL DEFAULT 'U';comment:销售员性别（M:男 F:女 O:其他 U:未知）" json:"gender" binding:"required,oneof=M F O U"`

@@ -1,7 +1,7 @@
 package model
 
 type CommodityCategory struct {
-	ID          int64   `gorm:"type:bigint;primary_key;comment:商品类别id" json:"id"`
+	ID          int64   `gorm:"type:bigint;primary_key;comment:商品类别id" json:"id,string"`
 	UserID      int64   `gorm:"type:bigint;not null;comment:关联用户ID" json:"-"`
 	Name        *string `gorm:"type:varchar(255);unique;not null;default:'';comment:类别名称" json:"name" binding:"required"`
 	Description *string `gorm:"type:varchar(255);not null;default:'';comment:类别描述" json:"description" binding:"required"`
