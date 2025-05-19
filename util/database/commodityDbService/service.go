@@ -58,7 +58,7 @@ func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.Commo
 	var total int64 // 新增总记录数变量
 
 	// 先查询总记录数
-	if err := database.GormDB.Model(&model.Supplier{}).
+	if err := database.GormDB.Model(&model.CommodityInfo{}).
 		Where("user_id = ?", user_id).
 		Count(&total).Error; err != nil {
 		return nil, 0, err
