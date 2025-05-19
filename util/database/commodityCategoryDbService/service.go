@@ -32,7 +32,7 @@ func (u *CommodityCategoryDbService) Create(supplier *model.CommodityCategory) (
 	result := database.GormDB.Create(&supplier)
 	return supplier, result.Error
 }
-func (s *CommodityCategoryDbService) Query(user_id int64, page, size int) ([]model.CommodityCategory, error) {
+func (s *CommodityCategoryDbService) Query(user_id int64, page, size int) ([]model.CommodityCategory, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -42,6 +42,14 @@ func (s *CommodityCategoryDbService) Query(user_id int64, page, size int) ([]mod
 
 	offset := (page - 1) * size
 	var suppliers []model.CommodityCategory
+	var total int64 // 新增总记录数变量
+
+	// 先查询总记录数
+	if err := database.GormDB.Model(&model.CommodityCategory{}).
+		Where("user_id = ?", user_id).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	err := database.GormDB.
 		Where("user_id = ?", user_id).
@@ -49,7 +57,7 @@ func (s *CommodityCategoryDbService) Query(user_id int64, page, size int) ([]mod
 		Limit(size).
 		Find(&suppliers).Error
 
-	return suppliers, err
+	return suppliers, total, err
 }
 
 func (s *CommodityCategoryDbService) GetById(user_id, id int64) (model.CommodityCategory, error) {
