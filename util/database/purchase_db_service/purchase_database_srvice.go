@@ -47,6 +47,7 @@ func (s *purchase_db_service) CreateInbound(dto *dto.PurchaseInboundDTO, user_id
 
 	// 创建一个空的 VO 对象
 	var inboundVO vo.PurchaseInboundVO
+	fmt.Printf("dto: %v\n", dto)
 
 	// 1、先根据商品ID获取商品数据
 	commodity, _ := s.CommodityRepo.GetById(user_id, dto.CommodityID)
@@ -59,6 +60,8 @@ func (s *purchase_db_service) CreateInbound(dto *dto.PurchaseInboundDTO, user_id
 		OperatorID:     user_id,
 		Remark:         dto.Remark,
 	}
+
+	fmt.Printf("获取到的 commodity 信息:\n%+v\n", commodity)
 
 	if err := database.GormDB.Create(inbound).Error; err != nil {
 		return inboundVO, err
@@ -88,6 +91,7 @@ func (s *purchase_db_service) CreateReturn(dto *dto.PurchaseReturnDTO, user_id i
 
 	var returnVO vo.PurchaseReturnVO
 	commodity, _ := s.CommodityRepo.GetById(user_id, dto.CommodityID)
+	fmt.Printf("获取到的 commodity 信息:\n%+v\n", commodity)
 
 	returnOrder := &po.PurchaseReturn{
 		CommodityID: dto.CommodityID,
@@ -139,20 +143,9 @@ func (s *purchase_db_service) GetInboundList(page, pageSize int, user_id int64) 
 
 	vos := make([]vo.PurchaseInboundVO, len(inbounds))
 	for i, inbound := range inbounds {
-		var commodity model.CommodityInfo
-		var operator model.User
 
-		// 查询商品信息
-		err := database.GormDB.First(&commodity, "id = ?", inbound.CommodityID).Error
-		if err != nil {
-			return nil, 0, err
-		}
-
-		// 查询操作员信息
-		err = database.GormDB.First(&operator, "id = ?", inbound.OperatorID).Error
-		if err != nil {
-			return nil, 0, err
-		}
+		commodity, _ := s.CommodityRepo.GetById(user_id, inbound.CommodityID)
+		fmt.Printf("获取到的 commodity 信息:\n%+v\n", commodity.Name)
 
 		vos[i] = vo.PurchaseInboundVO{
 			ID:            inbound.ID,
@@ -189,18 +182,13 @@ func (s *purchase_db_service) GetReturnList(page, pageSize int, user_id int64) (
 	vos := make([]vo.PurchaseReturnVO, len(returns))
 	for i, ret := range returns {
 		var commodity model.CommodityInfo
-		var operator model.User
-		// 查询商品信息
-		err := database.GormDB.First(&commodity, "id = ?", ret.CommodityID).Error
-		if err != nil {
-			return nil, 0, err
-		}
+		//// 查询商品信息
+		//err := database.GormDB.First(&commodity, "id = ?", ret.CommodityID).Error
+		//if err != nil {
+		//	return nil, 0, err
+		//}
 
-		// 查询操作员信息
-		err = database.GormDB.First(&operator, "id = ?", ret.OperatorID).Error
-		if err != nil {
-			return nil, 0, err
-		}
+		commodity, _ = s.CommodityRepo.GetById(user_id, ret.CommodityID)
 
 		vos[i] = vo.PurchaseReturnVO{
 			ID:            ret.ID,

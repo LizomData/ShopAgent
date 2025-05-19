@@ -5,12 +5,14 @@ import (
 	"ShopAgent/model"
 	"ShopAgent/model/requestModel"
 	"ShopAgent/util/database/commodityDbService"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 func Update(c *gin.Context) {
 	var req model.CommodityInfo
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Println(req.ID)
 		c.JSON(requestModel.ResponseFailure(requestModel.ParameterError, "解析参数失败: "+err.Error()))
 		return
 	}
