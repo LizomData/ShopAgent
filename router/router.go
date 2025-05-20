@@ -3,6 +3,7 @@ package router
 import (
 	"ShopAgent/controller/commodityCategoryController"
 	"ShopAgent/controller/commodityController"
+	"ShopAgent/controller/imageUploadController"
 	"ShopAgent/controller/purchase_controller"
 	"ShopAgent/controller/salespersonController"
 	"ShopAgent/controller/supplierController"
@@ -31,7 +32,6 @@ func Routers() *gin.Engine {
 		group.POST("/delete", commodityController.Delete)
 	}
 
-
 	group = r.Group("/api/v1/purchase")
 	group.Use(util.AuthMiddleware())
 	{
@@ -42,7 +42,7 @@ func Routers() *gin.Engine {
 		// 退货管理
 		group.POST("/return", purchase_controller.CreateReturn)
 		group.GET("/return/list", purchase_controller.GetReturnList)
-  }
+	}
 	group = r.Group("/api/v1/supplier")
 	group.Use(util.AuthMiddleware())
 	{
@@ -67,6 +67,15 @@ func Routers() *gin.Engine {
 		group.POST("/query", salespersonController.Query)
 		group.POST("/update", salespersonController.Update)
 		group.POST("/delete", salespersonController.Delete)
+	}
+
+	// 暴露静态文件目录
+	r.Static(imageUploadController.Uploader.Config.PublicPath, imageUploadController.Uploader.Config.UploadDir)
+	group = r.Group("/api/v1/image")
+	group.Use(util.AuthMiddleware())
+	{
+		group.POST("/upload", imageUploadController.Upload)
+		group.POST("/query", imageUploadController.Query)
 	}
 
 	return r
