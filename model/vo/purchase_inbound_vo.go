@@ -10,8 +10,8 @@ type PurchaseInboundVO struct {
 	Quantity      *int      `json:"quantity"`
 	Price         *float64  `json:"price"`
 	TotalAmount   *float64  `json:"totalAmount"`
-	Supplier      *string   `json:"supplier"`
 	InboundTime   time.Time `json:"inboundTime"`
 	OperatorId    int64     `json:"operatorName"`
 	Remark        *string   `json:"remark"`
+	SupplierName  *string   `json:"supplierName"`
 }

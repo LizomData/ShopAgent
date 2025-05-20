@@ -11,6 +11,7 @@ type PurchaseInbound struct {
 	Specifications *string   `gorm:"type:varchar(255);not null;default:'';comment:商品规格" json:"specifications"`
 	InboundTime    time.Time `gorm:"column:inbound_time;type:datetime;default:CURRENT_TIMESTAMP;comment:'进货时间'"`
 	OperatorID     int64     `gorm:"column:operator_id;comment:'操作人ID'"`
+	SupplierID     int64     `gorm:"column:supplier_id;comment:'供应商ID'"`
 	Remark         *string   `gorm:"column:remark;type:varchar(255);comment:'备注'"`
 }
 

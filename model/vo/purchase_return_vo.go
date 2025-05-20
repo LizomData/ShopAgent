@@ -12,6 +12,7 @@ type PurchaseReturnVO struct {
 	TotalAmount   *float64  `json:"totalAmount"`
 	Reason        *string   `json:"reason"`
 	ReturnTime    time.Time `json:"returnTime"`
-	OperatorID    int64     `json:"operatorName"`
+	OperatorID    int64     `json:"operatorId"`
 	Remark        *string   `json:"remark"`
+	SupplierName  *string   `json:"supplierName"`
 }

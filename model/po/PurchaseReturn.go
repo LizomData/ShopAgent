@@ -13,6 +13,7 @@ type PurchaseReturn struct {
 	Reason      *string   `gorm:"column:reason;type:varchar(255);comment:'退货原因'"`
 	ReturnTime  time.Time `gorm:"column:return_time;type:datetime;default:CURRENT_TIMESTAMP;comment:'退货时间'"`
 	OperatorID  int64     `gorm:"column:operator_id;comment:'操作人ID'"`
+	SupplierID  int64     `gorm:"column:supplier_id;comment:'供应商ID'"`
 	Remark      *string   `gorm:"column:remark;type:varchar(255);comment:'备注'"`
 }
 
