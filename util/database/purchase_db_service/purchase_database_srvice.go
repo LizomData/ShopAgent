@@ -53,10 +53,21 @@ func (s *PurchaseDbService) CreateInbound(dto *dto.PurchaseInboundDTO, userId in
 
 	// 创建一个空的 VO 对象
 	var inboundVO vo.PurchaseInboundVO
-	fmt.Printf("dto: %v\n", dto)
 
-	// 1、先根据商品ID获取商品数据
+	// 1. 查询供货商数据
+	supplier, _ := s.SupplierRepo.GetById(userId, dto.SupplierID)
+
+	// 检查供应商ID是否为空
+	if supplier.ID == 0 {
+		return inboundVO, fmt.Errorf("供应商不存在")
+	}
+
+	// 2. 先根据商品ID获取商品数据
 	commodity, _ := s.CommodityRepo.GetById(userId, dto.CommodityID)
+
+	if commodity.ID == 0 {
+		return inboundVO, fmt.Errorf("商品不存在")
+	}
 	inbound := &po.PurchaseInbound{
 		ID:             s.node.Generate().Int64(),
 		CommodityID:    dto.CommodityID,
@@ -69,21 +80,17 @@ func (s *PurchaseDbService) CreateInbound(dto *dto.PurchaseInboundDTO, userId in
 		Remark:         dto.Remark,
 	}
 
-	// 2. 插入数据
+	// 3. 插入数据
 	if err := database.GormDB.Create(inbound).Error; err != nil {
 		return inboundVO, err
 	}
 
-	// 3. 更新商品数量
+	// 4. 更新商品数量
 	if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
 		return inboundVO, err
 	}
 
-	// 4. 查询供货商数据
-	supplier, _ := s.SupplierRepo.GetById(userId, inbound.SupplierID)
-	fmt.Printf("查询到的供应商数据: %v\n", supplier)
-
-	// 4. 构建视图返回对象
+	// 5. 构建视图返回对象
 	inboundVO = vo.PurchaseInboundVO{
 		ID:            inbound.ID,
 		CommodityID:   inbound.CommodityID,
@@ -108,6 +115,14 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 	var returnVO vo.PurchaseReturnVO
 	commodity, _ := s.CommodityRepo.GetById(user_id, dto.CommodityID)
 
+	// 查询供应商
+	supplier, _ := s.SupplierRepo.GetById(user_id, dto.SupplierID)
+
+	// 检查供应商ID是否为空
+	if supplier.ID == 0 {
+		return returnVO, fmt.Errorf("供应商不存在")
+	}
+
 	returnOrder := &po.PurchaseReturn{
 		ID:          s.node.Generate().Int64(),
 		CommodityID: dto.CommodityID,
@@ -128,9 +143,6 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 	if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
 		return returnVO, err
 	}
-
-	// 查询供应商
-	supplier, _ := s.SupplierRepo.GetById(user_id, dto.SupplierID)
 
 	returnVO = vo.PurchaseReturnVO{
 		ID:            returnOrder.ID,
