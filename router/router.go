@@ -31,18 +31,22 @@ func Routers() *gin.Engine {
 		group.POST("/delete", commodityController.Delete)
 	}
 
-
 	group = r.Group("/api/v1/purchase")
 	group.Use(util.AuthMiddleware())
 	{
 		// 进货管理
 		group.POST("/inbound", purchase_controller.CreateInbound)
 		group.GET("/inbound/list", purchase_controller.GetInboundList)
+		group.DELETE("/inbound/delete", purchase_controller.DeleteInbound)
+		group.PUT("/inbound/update", purchase_controller.UpdateInbound)
 
 		// 退货管理
 		group.POST("/return", purchase_controller.CreateReturn)
 		group.GET("/return/list", purchase_controller.GetReturnList)
-  }
+		group.DELETE("/return/delete", purchase_controller.DeleteReturn)
+		group.PUT("/return/update", purchase_controller.UpdateReturn)
+	}
+
 	group = r.Group("/api/v1/supplier")
 	group.Use(util.AuthMiddleware())
 	{
