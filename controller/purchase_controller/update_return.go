@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateReturn 创建退货单
-func CreateReturn(c *gin.Context) {
-	var purchaseReturnDTO dto.PurchaseReturnDTO
-	if err := c.ShouldBind(&purchaseReturnDTO); err != nil {
+// UpdateReturn 修改退货单
+func UpdateReturn(c *gin.Context) {
+	var updateReturnDTO dto.UpdateReturnDTO
+	if err := c.ShouldBind(&updateReturnDTO); err != nil {
 		c.JSON(requestModel.ResponseFailure(requestModel.ParameterError, "解析参数失败: "+err.Error()))
 		return
 	}
@@ -22,12 +22,10 @@ func CreateReturn(c *gin.Context) {
 		return
 	}
 
-	returnVO, err := purchaseDbService.Instance.CreateReturn(&purchaseReturnDTO, user.ID)
-
-	if err != nil {
-		c.JSON(requestModel.ResponseFailure(999, "创建进货单失败: "+err.Error()))
+	if err := purchaseDbService.Instance.UpdateReturn(user.ID, &updateReturnDTO); err != nil {
+		c.JSON(requestModel.ResponseFailure(999, "修改退货单失败: "+err.Error()))
 		return
 	}
 
-	c.JSON(requestModel.ResponseSuccess(returnVO))
+	c.JSON(requestModel.ResponseSuccess(nil))
 }

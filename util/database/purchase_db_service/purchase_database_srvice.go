@@ -8,6 +8,7 @@ import (
 	"ShopAgent/util/database"
 	"ShopAgent/util/database/commodityDbService"
 	"ShopAgent/util/database/supplierDbService"
+	"errors"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"gorm.io/gorm"
@@ -85,10 +86,10 @@ func (s *PurchaseDbService) CreateInbound(dto *dto.PurchaseInboundDTO, userId in
 		return inboundVO, err
 	}
 
-	// 4. 更新商品数量
-	if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
-		return inboundVO, err
-	}
+	// 4. 更新商品数量 已经改成触发器
+	//if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
+	//	return inboundVO, err
+	//}
 
 	// 5. 构建视图返回对象
 	inboundVO = vo.PurchaseInboundVO{
@@ -113,6 +114,8 @@ func (s *PurchaseDbService) CreateInbound(dto *dto.PurchaseInboundDTO, userId in
 func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int64) (vo.PurchaseReturnVO, error) {
 
 	var returnVO vo.PurchaseReturnVO
+
+	// 查询商品
 	commodity, _ := s.CommodityRepo.GetById(user_id, dto.CommodityID)
 
 	// 查询供应商
@@ -121,6 +124,11 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 	// 检查供应商ID是否为空
 	if supplier.ID == 0 {
 		return returnVO, fmt.Errorf("供应商不存在")
+	}
+
+	// 检查库存是否足够
+	if commodity.Quantity == nil || *commodity.Quantity < *dto.Quantity {
+		return returnVO, fmt.Errorf("商品库存不足，当前库存: %d, 退货数量: %d", *commodity.Quantity, *dto.Quantity)
 	}
 
 	returnOrder := &po.PurchaseReturn{
@@ -139,10 +147,10 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 		return returnVO, err
 	}
 
-	// 在这里进行商品数量的操作，TODO 改成触发器
-	if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
-		return returnVO, err
-	}
+	// 在这里进行商品数量的操作，已经改成触发器
+	//if err := s.UpdateStock(dto.CommodityID, dto.Quantity); err != nil {
+	//	return returnVO, err
+	//}
 
 	returnVO = vo.PurchaseReturnVO{
 		ID:            returnOrder.ID,
@@ -248,4 +256,169 @@ func (s *PurchaseDbService) GetReturnList(page, pageSize int, user_id int64) ([]
 func (s *PurchaseDbService) UpdateStock(commodityID int64, quantity *int) error {
 	result := database.GormDB.Model(&model.CommodityInfo{}).Where("id = ?", commodityID).UpdateColumn("quantity", gorm.Expr("quantity + ?", quantity))
 	return result.Error
+}
+
+// DeleteInbound 删除进货单
+func (s *PurchaseDbService) DeleteInbound(userId int64, inboundId int64) error {
+	var inbound po.PurchaseInbound
+
+	// 查询进货单是否存在
+	if err := database.GormDB.Where("id = ? AND operator_id = ?", inboundId, userId).First(&inbound).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("进货单不存在")
+		}
+		return err
+	}
+
+	// 开启事务
+	return database.GormDB.Transaction(func(tx *gorm.DB) error {
+		// 删除进货单
+		if err := tx.Delete(&inbound).Error; err != nil {
+			return err
+		}
+
+		// 更新商品库存（减去进货数量）
+		negativeQuantity := -(*inbound.Quantity)
+		if err := s.UpdateStock(inbound.CommodityID, &negativeQuantity); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// DeleteReturn 删除退货单
+func (s *PurchaseDbService) DeleteReturn(userId int64, returnId int64) error {
+	var returnOrder po.PurchaseReturn
+
+	// 查询退货单是否存在
+	if err := database.GormDB.Where("id = ? AND operator_id = ?", returnId, userId).First(&returnOrder).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("退货单不存在")
+		}
+		return err
+	}
+
+	// 开启事务
+	return database.GormDB.Transaction(func(tx *gorm.DB) error {
+		// 删除退货单
+		if err := tx.Delete(&returnOrder).Error; err != nil {
+			return err
+		}
+
+		// 更新商品库存（加回退货数量）
+		if err := s.UpdateStock(returnOrder.CommodityID, returnOrder.Quantity); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// UpdateInbound 修改进货单
+func (s *PurchaseDbService) UpdateInbound(userId int64, dto *dto.UpdateInboundDTO) error {
+	var inbound po.PurchaseInbound
+
+	// 查询进货单是否存在
+	if err := database.GormDB.Where("id = ? AND operator_id = ?", dto.InboundID, userId).First(&inbound).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("进货单不存在")
+		}
+		return err
+	}
+
+	// 查询供应商
+	supplier, _ := s.SupplierRepo.GetById(userId, dto.SupplierID)
+	if supplier.ID == 0 {
+		return fmt.Errorf("供应商不存在")
+	}
+
+	// 查询商品
+	commodity, _ := s.CommodityRepo.GetById(userId, dto.CommodityID)
+	if commodity.ID == 0 {
+		return fmt.Errorf("商品不存在")
+	}
+
+	// 开启事务
+	return database.GormDB.Transaction(func(tx *gorm.DB) error {
+		// 计算库存差值
+		quantityDiff := *dto.Quantity - *inbound.Quantity
+
+		// 更新进货单信息
+		inbound.CommodityID = dto.CommodityID
+		inbound.Quantity = dto.Quantity
+		inbound.Price = dto.Price
+		inbound.Specifications = dto.Specifications
+		inbound.SupplierID = dto.SupplierID
+		inbound.Remark = dto.Remark
+
+		// 更新进货单
+		if err := tx.Save(&inbound).Error; err != nil {
+			return err
+		}
+
+		// 更新商品库存
+		if err := s.UpdateStock(inbound.CommodityID, &quantityDiff); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// UpdateReturn 修改退货单
+func (s *PurchaseDbService) UpdateReturn(userId int64, dto *dto.UpdateReturnDTO) error {
+	var returnOrder po.PurchaseReturn
+
+	// 查询退货单是否存在
+	if err := database.GormDB.Where("id = ? AND operator_id = ?", dto.ReturnID, userId).First(&returnOrder).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("退货单不存在")
+		}
+		return err
+	}
+
+	// 查询供应商
+	supplier, _ := s.SupplierRepo.GetById(userId, dto.SupplierID)
+	if supplier.ID == 0 {
+		return fmt.Errorf("供应商不存在")
+	}
+
+	// 查询商品
+	commodity, _ := s.CommodityRepo.GetById(userId, dto.CommodityID)
+	if commodity.ID == 0 {
+		return fmt.Errorf("商品不存在")
+	}
+
+	// 计算库存差值
+	quantityDiff := *dto.Quantity - *returnOrder.Quantity
+
+	// 检查库存是否足够
+	if commodity.Quantity == nil || *commodity.Quantity < quantityDiff {
+		return fmt.Errorf("商品库存不足，当前库存: %d, 需要的库存变化: %d", *commodity.Quantity, quantityDiff)
+	}
+
+	// 开启事务
+	return database.GormDB.Transaction(func(tx *gorm.DB) error {
+		// 更新退货单信息
+		returnOrder.CommodityID = dto.CommodityID
+		returnOrder.Quantity = dto.Quantity
+		returnOrder.Price = dto.Price
+		returnOrder.Reason = dto.Reason
+		returnOrder.SupplierID = dto.SupplierID
+		returnOrder.Remark = dto.Remark
+
+		// 更新退货单
+		if err := tx.Save(&returnOrder).Error; err != nil {
+			return err
+		}
+
+		// 更新商品库存（退货会减少库存）
+		negativeQuantityDiff := -quantityDiff
+		if err := s.UpdateStock(returnOrder.CommodityID, &negativeQuantityDiff); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

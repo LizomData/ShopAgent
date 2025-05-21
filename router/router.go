@@ -38,10 +38,14 @@ func Routers() *gin.Engine {
 		// 进货管理
 		group.POST("/inbound", purchase_controller.CreateInbound)
 		group.GET("/inbound/list", purchase_controller.GetInboundList)
+		group.PUT("/inbound/update", purchase_controller.UpdateInbound)
+		group.DELETE("/inbound/delete", purchase_controller.DeleteInbound)
 
 		// 退货管理
 		group.POST("/return", purchase_controller.CreateReturn)
 		group.GET("/return/list", purchase_controller.GetReturnList)
+		group.PUT("/return/update", purchase_controller.UpdateReturn)
+		group.DELETE("/return/delete", purchase_controller.DeleteReturn)
 	}
 	group = r.Group("/api/v1/supplier")
 	group.Use(util.AuthMiddleware())
