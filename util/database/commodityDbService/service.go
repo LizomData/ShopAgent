@@ -45,7 +45,7 @@ func (u *CommodityDbService) Create(commodity_info *model.CommodityInfo) (*model
 // page: 页码
 // size: 每页数量
 // 返回: 商品列表和可能的错误
-func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.CommodityInfo, int64, error) {
+func (s *CommodityDbService) Query(user_id int64, page, size int, name *string) ([]model.CommodityInfo, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -64,8 +64,14 @@ func (s *CommodityDbService) Query(user_id int64, page, size int) ([]model.Commo
 		return nil, 0, err
 	}
 
-	err := database.GormDB.
-		Where("user_id = ?", user_id).
+	query := database.GormDB.
+		Where("user_id = ?", user_id) // 固定条件
+
+	// 仅在 name 非空时添加条件
+	if *name != "" {
+		query = query.Where("name = ?", name)
+	}
+	err := query.
 		Offset(offset).
 		Limit(size).
 		Find(&commodity_infos).Error

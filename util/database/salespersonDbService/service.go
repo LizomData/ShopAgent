@@ -32,7 +32,7 @@ func (u *SalespersonDbService) Create(salesperson *model.SalesPerson) (*model.Sa
 	result := database.GormDB.Create(&salesperson)
 	return salesperson, result.Error
 }
-func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.SalesPerson, int64, error) {
+func (s *SalespersonDbService) Query(user_id int64, page, size int, name *string) ([]model.SalesPerson, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -51,8 +51,15 @@ func (s *SalespersonDbService) Query(user_id int64, page, size int) ([]model.Sal
 		return nil, 0, err
 	}
 
-	err := database.GormDB.
-		Where("user_id = ?", user_id).
+	query := database.GormDB.
+		Where("user_id = ?", user_id) // 固定条件
+
+	// 仅在 name 非空时添加条件
+	if *name != "" {
+		query = query.Where("name = ?", name)
+	}
+
+	err := query.
 		Offset(offset).
 		Limit(size).
 		Find(&salespersons).Error
