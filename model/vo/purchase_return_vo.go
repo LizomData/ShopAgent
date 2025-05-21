@@ -15,4 +15,5 @@ type PurchaseReturnVO struct {
 	OperatorID    int64     `json:"operatorId"`
 	Remark        *string   `json:"remark"`
 	SupplierName  *string   `json:"supplierName"`
+	SupplierId    int64     `json:"supplierId"`
 }

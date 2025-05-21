@@ -204,6 +204,7 @@ func (s *PurchaseDbService) GetInboundList(page, pageSize int, user_id int64) ([
 			OperatorId:    user_id,
 			SupplierName:  supplier.Name,
 			Remark:        inbound.Remark,
+			SupplierId:    supplier.ID,
 		}
 		*vos[i].TotalAmount = float64(*inbound.Quantity) * *inbound.Price
 	}
@@ -245,6 +246,7 @@ func (s *PurchaseDbService) GetReturnList(page, pageSize int, user_id int64) ([]
 			OperatorID:    user_id,
 			SupplierName:  supplier.Name,
 			Remark:        ret.Remark,
+			SupplierId:    supplier.ID,
 		}
 		*vos[i].TotalAmount = float64(*ret.Quantity) * *ret.Price
 	}
