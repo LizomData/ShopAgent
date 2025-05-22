@@ -1,2 +1,2 @@
-docker build --platform linux/arm64 -t shopagent:latest .
+docker build --platform linux/amd64 -t shopagent:latest .
 

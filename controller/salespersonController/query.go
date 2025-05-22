@@ -13,12 +13,17 @@ func Query(c *gin.Context) {
 		c.JSON(requestModel.ResponseFailure(requestModel.ParameterError, "解析参数失败: "+err.Error()))
 		return
 	}
+	if req.Name == nil {
+		var em string
+		em = ""
+		req.Name = &em
+	}
 	user, err := common.GetUserFromContext(c)
 	if err != nil {
 		c.JSON(requestModel.ResponseFailure(999, "获取用户id失败: "+err.Error()))
 		return
 	}
-	salespersons, total, err := salespersonDbService.Instance.Query(user.ID, *req.Page, *req.Size)
+	salespersons, total, err := salespersonDbService.Instance.Query(user.ID, *req.Page, *req.Size, req.Name)
 	if err != nil {
 		c.JSON(requestModel.ResponseFailure(999, "查询失败:"+err.Error()))
 		return

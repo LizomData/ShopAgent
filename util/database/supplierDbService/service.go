@@ -32,7 +32,7 @@ func (u *SupplierDbService) Create(supplier *model.Supplier) (*model.Supplier, e
 	result := database.GormDB.Create(&supplier)
 	return supplier, result.Error
 }
-func (s *SupplierDbService) Query(user_id int64, page, size int) ([]model.Supplier, int64, error) {
+func (s *SupplierDbService) Query(user_id int64, page, size int, name *string) ([]model.Supplier, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -50,10 +50,15 @@ func (s *SupplierDbService) Query(user_id int64, page, size int) ([]model.Suppli
 		Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+	query := database.GormDB.
+		Where("user_id = ?", user_id) // 固定条件
 
+	// 仅在 name 非空时添加条件
+	if *name != "" {
+		query = query.Where("name = ?", name)
+	}
 	// 再查询分页数据
-	err := database.GormDB.
-		Where("user_id = ?", user_id).
+	err := query.
 		Offset(offset).
 		Limit(size).
 		Find(&suppliers).Error
