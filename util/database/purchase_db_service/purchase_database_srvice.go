@@ -93,16 +93,17 @@ func (s *PurchaseDbService) CreateInbound(dto *dto.PurchaseInboundDTO, userId in
 
 	// 5. 构建视图返回对象
 	inboundVO = vo.PurchaseInboundVO{
-		ID:            inbound.ID,
-		CommodityID:   inbound.CommodityID,
-		CommodityName: commodity.Name,
-		Quantity:      inbound.Quantity,
-		Price:         inbound.Price,
-		TotalAmount:   new(float64),
-		InboundTime:   inbound.InboundTime,
-		OperatorId:    userId,
-		SupplierName:  supplier.Name,
-		Remark:        inbound.Remark,
+		ID:             inbound.ID,
+		CommodityID:    inbound.CommodityID,
+		CommodityName:  commodity.Name,
+		Quantity:       inbound.Quantity,
+		Price:          inbound.Price,
+		TotalAmount:    new(float64),
+		InboundTime:    inbound.InboundTime,
+		Specifications: inbound.Specifications,
+		OperatorId:     userId,
+		SupplierName:   supplier.Name,
+		Remark:         inbound.Remark,
 	}
 
 	*inboundVO.TotalAmount = float64(*inboundVO.Quantity) * *inboundVO.Price
@@ -131,16 +132,18 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 		return returnVO, fmt.Errorf("商品库存不足，当前库存: %d, 退货数量: %d", *commodity.Quantity, *dto.Quantity)
 	}
 
+	fmt.Println(dto)
+
 	returnOrder := &po.PurchaseReturn{
-		ID:          s.node.Generate().Int64(),
-		CommodityID: dto.CommodityID,
-		Quantity:    dto.Quantity,
-		Price:       dto.Price,
-		Reason:      dto.Reason,
-		ReturnTime:  time.Now(),
-		OperatorID:  user_id,
-		SupplierID:  dto.SupplierID,
-		Remark:      dto.Remark,
+		ID:             s.node.Generate().Int64(),
+		CommodityID:    dto.CommodityID,
+		Quantity:       dto.Quantity,
+		Price:          dto.Price,
+		Specifications: dto.Specifications,
+		ReturnTime:     time.Now(),
+		OperatorID:     user_id,
+		SupplierID:     dto.SupplierID,
+		Remark:         dto.Remark,
 	}
 
 	if err := database.GormDB.Create(returnOrder).Error; err != nil {
@@ -153,16 +156,17 @@ func (s *PurchaseDbService) CreateReturn(dto *dto.PurchaseReturnDTO, user_id int
 	//}
 
 	returnVO = vo.PurchaseReturnVO{
-		ID:            returnOrder.ID,
-		CommodityID:   returnOrder.CommodityID,
-		CommodityName: commodity.Name,
-		Quantity:      returnOrder.Quantity,
-		Price:         returnOrder.Price,
-		TotalAmount:   new(float64),
-		ReturnTime:    returnOrder.ReturnTime,
-		OperatorID:    user_id,
-		SupplierName:  supplier.Name,
-		Remark:        returnOrder.Remark,
+		ID:             returnOrder.ID,
+		CommodityID:    returnOrder.CommodityID,
+		CommodityName:  commodity.Name,
+		Quantity:       returnOrder.Quantity,
+		Price:          returnOrder.Price,
+		TotalAmount:    new(float64),
+		ReturnTime:     returnOrder.ReturnTime,
+		OperatorID:     user_id,
+		SupplierName:   supplier.Name,
+		Specifications: returnOrder.Specifications,
+		Remark:         returnOrder.Remark,
 	}
 
 	*returnVO.TotalAmount = float64(*returnVO.Quantity) * *returnVO.Price
@@ -194,17 +198,18 @@ func (s *PurchaseDbService) GetInboundList(page, pageSize int, user_id int64) ([
 		supplier, _ := s.SupplierRepo.GetById(user_id, inbound.SupplierID)
 
 		vos[i] = vo.PurchaseInboundVO{
-			ID:            inbound.ID,
-			CommodityID:   inbound.CommodityID,
-			CommodityName: commodity.Name,
-			Quantity:      inbound.Quantity,
-			Price:         inbound.Price,
-			TotalAmount:   new(float64),
-			InboundTime:   inbound.InboundTime,
-			OperatorId:    user_id,
-			SupplierName:  supplier.Name,
-			Remark:        inbound.Remark,
-			SupplierId:    supplier.ID,
+			ID:             inbound.ID,
+			CommodityID:    inbound.CommodityID,
+			CommodityName:  commodity.Name,
+			Quantity:       inbound.Quantity,
+			Price:          inbound.Price,
+			TotalAmount:    new(float64),
+			InboundTime:    inbound.InboundTime,
+			Specifications: inbound.Specifications,
+			OperatorId:     user_id,
+			SupplierName:   supplier.Name,
+			Remark:         inbound.Remark,
+			SupplierId:     supplier.ID,
 		}
 		*vos[i].TotalAmount = float64(*inbound.Quantity) * *inbound.Price
 	}
@@ -235,18 +240,18 @@ func (s *PurchaseDbService) GetReturnList(page, pageSize int, user_id int64) ([]
 		supplier, _ := s.SupplierRepo.GetById(user_id, ret.SupplierID)
 
 		vos[i] = vo.PurchaseReturnVO{
-			ID:            ret.ID,
-			CommodityID:   ret.CommodityID,
-			CommodityName: commodity.Name,
-			Quantity:      ret.Quantity,
-			Price:         ret.Price,
-			TotalAmount:   new(float64),
-			Reason:        ret.Reason,
-			ReturnTime:    ret.ReturnTime,
-			OperatorID:    user_id,
-			SupplierName:  supplier.Name,
-			Remark:        ret.Remark,
-			SupplierId:    supplier.ID,
+			ID:             ret.ID,
+			CommodityID:    ret.CommodityID,
+			CommodityName:  commodity.Name,
+			Quantity:       ret.Quantity,
+			Price:          ret.Price,
+			TotalAmount:    new(float64),
+			Specifications: commodity.Specifications,
+			ReturnTime:     ret.ReturnTime,
+			OperatorID:     user_id,
+			SupplierName:   supplier.Name,
+			Remark:         ret.Remark,
+			SupplierId:     supplier.ID,
 		}
 		*vos[i].TotalAmount = float64(*ret.Quantity) * *ret.Price
 	}
@@ -406,7 +411,7 @@ func (s *PurchaseDbService) UpdateReturn(userId int64, dto *dto.UpdateReturnDTO)
 		returnOrder.CommodityID = dto.CommodityID
 		returnOrder.Quantity = dto.Quantity
 		returnOrder.Price = dto.Price
-		returnOrder.Reason = dto.Reason
+		returnOrder.Specifications = dto.Specifications
 		returnOrder.SupplierID = dto.SupplierID
 		returnOrder.Remark = dto.Remark
 
